@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset = utf-8"/>
+		<title>WebSocket客户端</title>
+	</head>
+	<body>
+		<form onSubmit="return false;" style="text-align: center">
+            <hr color="red"/>
+            <label for="responseContent"><h2>客户端接收到服务端返回的应答消息</h2></label>
+            <textarea id="responseContent" style = "width:1024px; height:300px"></textarea>
+
+            <br>
+            <label for="message">请输入</label>
+            <input type="text" name="message" value="" id="message"/>
+
+            <button type="button" onclick="send(this.form.message.value)">发送</button>
+            <button type="button" onclick="exit()">关闭</button>
+		</form>
+
+        <script type="text/javascript">
+            var socket;
+            if(!window.WebSocket){
+                window.WebSocket = window.MozWebSocket;
+            }
+            var content = document.getElementById('responseContent');
+
+            if(window.WebSocket){
+                socket = new WebSocket("ws://localhost:8888/websocket?uid=" + Math.random());
+                socket.onmessage = function(event){
+                    content.value += event.data + "\r\n";
+                };
+
+                socket.onopen = function(event){
+                    content.value = "你当前的浏览器支持WebSocket,请进行后续操作\r\n";
+                };
+
+                socket.onclose = exit;
+            }else{
+                alert("您的浏览器不支持WebSocket");
+            }
+
+            function send(message){
+                if(!window.WebSocket){
+                    return;
+                }
+
+                if(+socket.readyState === WebSocket.OPEN){
+                    socket.send(message);
+                }else{
+                    alert("WebSocket连接没有建立成功！！");
+                }
+            }
+
+            function exit(){
+                if(!window.WebSocket){
+                    return;
+                }
+
+                if(+socket.readyState === WebSocket.OPEN){
+                    content.value = "";
+                    content.value = "WebSocket连接已经关闭\r\n";
+                    socket.close();
+                }
+            }
+
+            window.onbeforeunload = function () {
+                exit();
+            };
+        </script>
+	</body>
+</html>
