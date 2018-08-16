@@ -20,7 +20,6 @@ public class Test extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         req.setCharacterEncoding("UTF-8");
@@ -30,6 +29,7 @@ public class Test extends HttpServlet {
         byte[] bytes = new byte[1024];
 
         StringBuilder sb = new StringBuilder();
+
 
         int len;
         while ((len = inputStream.read(bytes, 0, bytes.length)) != -1) {
