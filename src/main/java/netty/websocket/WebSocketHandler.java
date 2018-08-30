@@ -71,7 +71,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
         }
 
         if (frame instanceof TextWebSocketFrame) {
-            channel.writeAndFlush(new TextWebSocketFrame("已收到：" + ((TextWebSocketFrame) frame).text()));
+            channel.writeAndFlush(new TextWebSocketFrame(((TextWebSocketFrame) frame).text()));
         }
     }
 
