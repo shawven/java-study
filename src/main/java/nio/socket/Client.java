@@ -51,24 +51,25 @@ public class Client {
                 } else if (key.isReadable()) {
                     System.out.println("client 读已就绪");
                     ByteBuffer buffer = ByteBuffer.allocate(1024);
-                    StringBuilder sb = new StringBuilder();
-                    while (client.read(buffer) != -1) {
-                        buffer.flip();
-                        sb.append(buffer.get());
-                        buffer.clear();
+                    client.read(buffer);
+                    buffer.flip();
+                    byte[] bytes = new byte[buffer.limit()];
+                    while (buffer.hasRemaining()) {
+                        buffer.get(bytes);
                     }
-                    System.out.println("已收到:" + sb.toString());
+                    buffer.clear();
+                    System.out.println("已收到:" + new String(bytes, 0, bytes.length));
 
                     ScheduledExecutorService scheduledExecutorService =
                             Executors.newScheduledThreadPool(1, Thread::new);
-                    scheduledExecutorService.scheduleWithFixedDelay(() -> {
+                    scheduledExecutorService.schedule(() -> {
                         System.out.println("即将发送数据");
                         try {
                             client.write(ByteBuffer.wrap("第一次主动发送数据".getBytes()));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }, 0, 5 , TimeUnit.SECONDS);
+                    }, 5 , TimeUnit.SECONDS);
 
                 } else if (key.isWritable()) {
                     System.out.println("client 写已就绪");

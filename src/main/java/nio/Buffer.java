@@ -28,16 +28,16 @@ public class Buffer {
         newChannel.transferFrom(oldChannel, 3, oldChannel.size());
 
 
-//        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
 //
-//        while (oldChannel.read(byteBuffer) != -1) {
-//
-//            byteBuffer.flip();
-//
-//            newChannel.write(byteBuffer);
-//
-//            byteBuffer.clear();
-//        }
+        while (oldChannel.read(byteBuffer) != -1) {
+
+            byteBuffer.flip();
+
+            newChannel.write(byteBuffer);
+
+            byteBuffer.clear();
+        }
         oldChannel.close();
         newChannel.force(true);
         newChannel.close();

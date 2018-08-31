@@ -46,8 +46,16 @@ public class Server {
                 } else if (key.isReadable()) {
                     System.out.println("server 读已就绪");
                     SocketChannel currentChannel = (SocketChannel) key.channel();
-                    ByteBuffer byteBuffer = ByteBuffer.wrap("hello world".getBytes());
-                    currentChannel.write(byteBuffer);
+                    ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    currentChannel.read(buffer);
+                    buffer.flip();
+                    byte[] bytes = new byte[buffer.limit()];
+                    while (buffer.hasRemaining()) {
+                        buffer.get(bytes);
+                    }
+                    buffer.clear();
+                    System.out.println("已收到:" + new String(bytes, 0, bytes.length));
+                    currentChannel.write(ByteBuffer.wrap("test message".getBytes()));
                 } else if (key.isWritable()) {
                     System.out.println("server 写已就绪");
 //                    ByteBuffer buffer = ByteBuffer.allocate(1024);
