@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset = utf-8"/>
-<title>Index Jsp</title>
+<title>Welcome</title>
 <body>
-<h1>Hello World!</h1>
-<a href="${ctx}/passport">login</a>
+<h1>Home Page</h1>
+<a href="${ctx}/logout">logout</a>
 </body>
 </html>

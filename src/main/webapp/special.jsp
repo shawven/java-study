@@ -5,7 +5,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset = utf-8"/>
 <title>Index Jsp</title>
 <body>
-<h1>Hello World!</h1>
-<a href="${ctx}/passport">login</a>
+<h1>I'm a special page!</h1>
 </body>
 </html>

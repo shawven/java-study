@@ -55,7 +55,6 @@ public class Server {
                     }
                     buffer.clear();
                     System.out.println("已收到:" + new String(bytes, 0, bytes.length));
-                    currentChannel.write(ByteBuffer.wrap("test message".getBytes()));
                 } else if (key.isWritable()) {
                     System.out.println("server 写已就绪");
 //                    ByteBuffer buffer = ByteBuffer.allocate(1024);

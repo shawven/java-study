@@ -24,7 +24,7 @@ public class Client {
 
         Selector selector = Selector.open();
 
-        clientSocketChannel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
+        clientSocketChannel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 
         while (clientSocketChannel.finishConnect()) {
 
@@ -73,6 +73,7 @@ public class Client {
 
                 } else if (key.isWritable()) {
                     System.out.println("client 写已就绪");
+                    client.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_READ );
 //                    ByteBuffer buffer = ByteBuffer.allocate(1024);
 //                    StringBuilder sb = new StringBuilder();
 //                    while (client.read(buffer) != -1) {

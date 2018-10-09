@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/security
+       http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <http pattern="/passport*" security="none"/>
+    <http pattern="/special" security="none"/>
+    <http pattern="/resources/**" security="none"/>
+    <http pattern="/index" security="none"/>
+    <!--<http pattern="/ws"  security="none"/>-->
+    <http pattern="/" security="none"/>
+
+    <http use-expressions="true" auto-config="true">
+        <intercept-url pattern="/ws" access="permitAll()"/>
+        <intercept-url pattern="/websocket/**" access="permitAll()"/>
+
+        <!--必须通过验证才能访问-->
+        <intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+
+        <!--配置登录页面url、登录提交页面url、登录失败页面url、登录用户名和密码字段、登录成功处理器 -->
+        <form-login login-page="/passport" login-processing-url="/login"
+                    default-target-url="/home" always-use-default-target="true"
+                    authentication-failure-url="/passport?error=1"
+                    authentication-failure-forward-url="/passport?error=2"
+                    username-parameter="username" password-parameter="password"/>
+
+        <!--配置注销url、注销跳转url、session失效-->
+        <logout logout-url="/logout" logout-success-url="/passport" invalidate-session="true"/>
+
+        <session-management session-fixation-protection="none" invalid-session-url="/passport">
+            <concurrency-control max-sessions="60" error-if-maximum-exceeded="false" expired-url="/"/>
+        </session-management>
+
+        <csrf disabled="true"/>
+    </http>
+
+    <authentication-manager>
+        <authentication-provider>
+            <user-service>
+                <!-- 这里创建两个用户，可以通过用户名密码登录 -->
+                <user name="jimi" password="{noop}jimispassword" authorities="ROLE_USER, ROLE_ADMIN" />
+                <user name="bob" password="{noop}bobspassword" authorities="ROLE_USER" />
+            </user-service>
+        </authentication-provider>
+    </authentication-manager>
+
+</beans:beans>

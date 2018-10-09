@@ -8,11 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created with IntelliJ IDEA.
- *
- * @description:
- * @author: FS
- * @date: 2018-07-23 15:29
+ * @author FS
  */
 public class Test extends HttpServlet {
 

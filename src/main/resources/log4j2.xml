@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="logPattern">%d %-5p [%t] %c{36}.%M(%F:%L) - %m%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${logPattern}"/>
+        </Console>
+        <!--<RollingFile name="RollingFile" fileName="logs/system.log"-->
+                     <!--filePattern="logs/$${date:yyyy-MM}/%d{MM-dd-yyyy}-%i.log">-->
+            <!--<PatternLayout pattern="${logPattern}"/>-->
+            <!--<SizeBasedTriggeringPolicy size="10 MB" />-->
+        <!--</RollingFile>-->
+    </Appenders>
+    <Loggers>
+        <logger name="org.springframework" level="DEBUG"/>
+        <!--<logger name="net.sf.ehcache" level="DEBUG"/>-->
+        <!--<logger name="org.apache.ibatis.io" level="DEBUG"/>-->
+        <!--<logger name="org.mybatis" level="DEBUG"/>-->
+
+        <Root level="DEBUG">
+            <AppenderRef ref="Console" />
+            <!--<AppenderRef ref="RollingFile" />-->
+        </Root>
+    </Loggers>
+</Configuration>
