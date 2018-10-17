@@ -11,11 +11,10 @@
     <http pattern="/special" security="none"/>
     <http pattern="/resources/**" security="none"/>
     <http pattern="/index" security="none"/>
-    <!--<http pattern="/ws"  security="none"/>-->
+    <http pattern="/ws"  security="none"/>
     <http pattern="/" security="none"/>
 
     <http use-expressions="true" auto-config="true">
-        <intercept-url pattern="/ws" access="permitAll()"/>
         <intercept-url pattern="/websocket/**" access="permitAll()"/>
 
         <!--必须通过验证才能访问-->
@@ -34,6 +33,11 @@
         <session-management session-fixation-protection="none" invalid-session-url="/passport">
             <concurrency-control max-sessions="60" error-if-maximum-exceeded="false" expired-url="/"/>
         </session-management>
+
+        <headers>
+            <!--只允许同源域下加载iframe -->
+            <frame-options policy="SAMEORIGIN" />
+        </headers>
 
         <csrf disabled="true"/>
     </http>

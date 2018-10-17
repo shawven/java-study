@@ -9,7 +9,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.server.HandshakeHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 import static org.springframework.messaging.simp.SimpMessageType.*;
 
@@ -45,8 +44,6 @@ public class MyWebSocketConfig extends AbstractSecurityWebSocketMessageBrokerCon
      *
      * @param stompEndpointRegistry
      */
-
-
     @Override
     public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
         //在网页上可以通过"/applicationName/hello"来和服务器的WebSocket连接
@@ -79,7 +76,7 @@ public class MyWebSocketConfig extends AbstractSecurityWebSocketMessageBrokerCon
 
     @Bean
     public HandshakeInterceptor myInterceptor() {
-        return new HttpSessionHandshakeInterceptor();
+        return new MyHandshakeInterceptor();
     }
 
     @Override

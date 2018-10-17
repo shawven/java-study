@@ -6,6 +6,7 @@
 <title>Welcome</title>
 <body>
 <h1>Home Page</h1>
-<a href="${ctx}/logout">logout</a>
+<a href="${ctx}/logout">logout</a><br>
+<a href="${ctx}/ws">ws</a>
 </body>
 </html>

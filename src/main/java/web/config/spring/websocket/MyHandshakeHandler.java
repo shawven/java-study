@@ -17,6 +17,9 @@ public class MyHandshakeHandler extends DefaultHandshakeHandler {
     protected Principal determineUser(ServerHttpRequest request,
                                       WebSocketHandler wsHandler,
                                       Map<String, Object> attributes) {
-        return super.determineUser(request, wsHandler, attributes);
+        if (request.getPrincipal() == null) {
+            return (Principal) attributes.get("token");
+        }
+        return request.getPrincipal();
     }
 }

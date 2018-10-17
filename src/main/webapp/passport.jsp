@@ -18,6 +18,7 @@
             <div class="clear"></div>
         </li>
     </ul>
-</form>
+</form><br>
+<a href="${ctx}/ws">ws</a>
 </body>
 </html>
