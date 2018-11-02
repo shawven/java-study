@@ -1,4 +1,4 @@
-/**
+package rsa; /**
  * @author FS
  * @date 2018-10-17 16:16
  */
@@ -18,13 +18,13 @@ import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 
-public class RSA {
+public class RSATest {
 
     private String priKey;
     private String pubKey;
 
     public static void main(String[] args) {
-        RSA rsa = new RSA();
+        RSATest rsa = new RSATest();
         String str = "我要加密这段文字。";
         System.out.println("原文:"+"我要加密这段文字。");
         String crypt = rsa.encryptByPrivateKey(str);
@@ -54,8 +54,8 @@ public class RSA {
         }
     }
 
-    public RSA(){
-        priKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\main\\java\\rsa_private_key.pem");
+    public RSATest(){
+        priKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\main\\java\\pkcs8_private_key.pem");
         pubKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\main\\java\\rsa_public_key.pem");
     }
 
@@ -69,9 +69,9 @@ public class RSA {
         try {
             byte[] pribyte = base64decode(priKey.trim());
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pribyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPrivateKey privateKey = (RSAPrivateKey) fac.generatePrivate(keySpec);
-            Cipher c1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher c1 = Cipher.getInstance("RSATest/ECB/PKCS1Padding");
             c1.init(Cipher.ENCRYPT_MODE, privateKey);
             str = base64encode(c1.doFinal(data.getBytes()));
         } catch (Exception e) {
@@ -91,9 +91,9 @@ public class RSA {
         try {
             byte[] pribyte = base64decode(priKey.trim());
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pribyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPrivateKey privateKey = (RSAPrivateKey) fac.generatePrivate(keySpec);
-            Cipher c1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher c1 = Cipher.getInstance("RSATest/ECB/PKCS1Padding");
             c1.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] temp = c1.doFinal(base64decode(data));
             str = new String(temp);
@@ -115,9 +115,9 @@ public class RSA {
         try {
             byte[] pubbyte = base64decode(pubKey.trim());
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubbyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPublicKey rsaPubKey = (RSAPublicKey) fac.generatePublic(keySpec);
-            Cipher c1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher c1 = Cipher.getInstance("RSATest/ECB/PKCS1Padding");
             c1.init(Cipher.ENCRYPT_MODE, rsaPubKey);
             str = base64encode(c1.doFinal(data.getBytes()));
         } catch (Exception e) {
@@ -137,9 +137,9 @@ public class RSA {
         try {
             byte[] pubbyte = base64decode(pubKey.trim());
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubbyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPublicKey rsaPubKey = (RSAPublicKey) fac.generatePublic(keySpec);
-            Cipher c1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher c1 = Cipher.getInstance("RSATest/ECB/PKCS1Padding");
             c1.init(Cipher.DECRYPT_MODE, rsaPubKey);
             byte[] temp = c1.doFinal(base64decode(data));
             str = new String(temp);
@@ -159,7 +159,7 @@ public class RSA {
             Signature sigEng = Signature.getInstance("SHA1withRSA");
             byte[] pribyte = base64decode(priKey.trim());
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pribyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPrivateKey privateKey = (RSAPrivateKey) fac.generatePrivate(keySpec);
             sigEng.initSign(privateKey);
             sigEng.update(src.getBytes());
@@ -182,7 +182,7 @@ public class RSA {
             Signature sigEng = Signature.getInstance("SHA1withRSA");
             byte[] pubbyte = base64decode(pubKey.trim());
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubbyte);
-            KeyFactory fac = KeyFactory.getInstance("RSA");
+            KeyFactory fac = KeyFactory.getInstance("RSATest");
             RSAPublicKey rsaPubKey = (RSAPublicKey) fac.generatePublic(keySpec);
             sigEng.initVerify(rsaPubKey);
             sigEng.update(src.getBytes());

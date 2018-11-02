@@ -88,10 +88,8 @@ public class IpUtils {
      * @return
      */
     private static String httpRequest(String urlStr) {
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:50.0) Gecko/20100101 Firefox/50.0");
         try {
-            return HttpClientUtils.get(urlStr, headers, Collections.emptyMap());
+            return HttpClientUtils.get(urlStr, HttpClientUtils.commonHeaders(), Collections.emptyMap());
         } catch (IOException e) {
             return null;
         }

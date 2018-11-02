@@ -4,6 +4,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -51,17 +52,15 @@ import java.util.concurrent.TimeUnit;
  * @date 2018-10-12 15:30
  */
 public class HttpClientUtils {
-
-    private static Logger logger = LoggerFactory.getLogger(HttpClientUtils.class);
+    public static Logger logger = LoggerFactory.getLogger(HttpClientUtils.class);
 
     private static final int TIMEOUT = 6;
     private static final int MAX_TOTAL = 200;
-    private static final int MAX_PER_ROUTE = 20;
+    private static final int MAX_PER_ROUTE = 100;
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String HTTP = "http";
     private static final String HTTPS = "https";
-    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36";
 
     private static RequestConfig requestConfig;
     private static PoolingHttpClientConnectionManager connectionManager;
@@ -98,7 +97,8 @@ public class HttpClientUtils {
             requestConfig = RequestConfig.custom()
                     .setSocketTimeout(TIMEOUT * 1000)
                     .setConnectTimeout(TIMEOUT * 1000)
-                    .setConnectionRequestTimeout(TIMEOUT * 1000)
+                    .setConnectionRequestTimeout(1000)
+                    .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
                     .build();
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             logger.error(e.getMessage(), e);
@@ -109,10 +109,10 @@ public class HttpClientUtils {
         return HttpClients.custom()
                 .setDefaultRequestConfig(requestConfig)
                 .setRetryHandler(retryHandler)
-                .setUserAgent(USER_AGENT)
                 .setConnectionManager(connectionManager)
                 .setSSLSocketFactory(sslConnectionSocketFactory)
-                .setConnectionTimeToLive(TIMEOUT, TimeUnit.SECONDS).build();
+                .setConnectionTimeToLive(TIMEOUT, TimeUnit.SECONDS)
+                .build();
     }
 
     public static String get(String httpUrl) throws IOException {
@@ -120,26 +120,26 @@ public class HttpClientUtils {
         return execute(httpGet);
     }
 
-    public static String get(String httpUrl, Map<String, Object> params) throws IOException {
+    public static String get(String httpUrl, Map<String, ?> params) throws IOException {
         String queryString = getQueryString(params);
         HttpGet httpGet = new HttpGet(queryString == null ? httpUrl : httpUrl  + queryString);
         return execute(httpGet);
     }
 
-    public static String get(String httpUrl, Map<String, String> headers, Map<String, Object> params) throws IOException {
+    public static String get(String httpUrl, Map<String, String> headers, Map<String, ?> params) throws IOException {
         String queryString = getQueryString(params);
         HttpGet httpGet = new HttpGet(queryString == null ? httpUrl : httpUrl  + queryString);
         httpGet.setHeaders(getHeaders(headers));
         return execute(httpGet);
     }
 
-    public static String post(String httpUrl, Map<String, Object> params) throws IOException {
+    public static String post(String httpUrl, Map<String, ?> params) throws IOException {
         HttpPost httpPost = new HttpPost(httpUrl);
         httpPost.setEntity(getPayload(params));
         return execute(httpPost);
     }
 
-    public static String post(String httpUrl, Map<String, String> headers, Map<String, Object> params) throws IOException {
+    public static String post(String httpUrl, Map<String, String> headers, Map<String, ?> params) throws IOException {
         HttpPost httpPost = new HttpPost(httpUrl);
         httpPost.setEntity(getPayload(params));
         httpPost.setHeaders(getHeaders(headers));
@@ -155,13 +155,11 @@ public class HttpClientUtils {
             response = httpClient.execute(request);
             HttpEntity entity = response.getEntity();
             return entity == null ? null : EntityUtils.toString(entity, CHARSET);
+
         } finally {
             // 关闭连接,释放资源
             if (response != null) {
                 response.close();
-            }
-            if (httpClient != null) {
-                httpClient.close();
             }
         }
     }
@@ -172,14 +170,14 @@ public class HttpClientUtils {
      * @param params  map
      * @return  格式:key1=value1&key2=value2
      */
-    public static String getQueryString(Map<String, Object> params) {
+    public static String getQueryString(Map<String, ?> params) {
         if (MapUtils.isEmpty(params)) {
             return null;
         }
 
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
+        for (Map.Entry<String, ?> entry : params.entrySet()) {
             if (StringUtils.isBlank(entry.getKey()) || StringUtils.isBlank(entry.getValue().toString())) {
                 continue;
             }
@@ -201,13 +199,13 @@ public class HttpClientUtils {
      * @param params map
      * @return StringEntity
      */
-    private static StringEntity getPayload(Map<String, Object> params) {
+    private static StringEntity getPayload(Map<String, ?> params) {
         if (MapUtils.isEmpty(params)) {
             return null;
         }
 
         List<NameValuePair> forParams  = new ArrayList<>();
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
+        for (Map.Entry<String, ?> entry : params.entrySet()) {
             if (StringUtils.isBlank(entry.getKey()) || entry.getValue() == null ||
                     StringUtils.isBlank(entry.getValue().toString())) {
                 continue;
@@ -233,6 +231,15 @@ public class HttpClientUtils {
         }
 
         return headers.toArray(new Header[]{});
+    }
+
+    public static Map<String, String> commonHeaders() {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        headers.put("Accept-Language", "zh-CN,zh;q=0.8");
+        headers.put("Accept-Encoding", "gzip, deflate, br");
+        headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36");
+        return headers;
     }
 
     /**
