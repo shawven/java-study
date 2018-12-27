@@ -1,30 +1,29 @@
 package web.supports.utils;
 
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- *
- * @description: excel工具类
- * @author: FS
- * @date: 2018-03-12 14:04
+ * @author FS
+ * @since  2018-12-27
  */
 public class ExcelUtil<T> {
 
     private static final String DEFAULT_FONT_NAME = "宋体";
     private static final int DEFAULT_HEADER_HEIGHT = 20;
     private static final int DEFAULT_COLUMN_HEIGHT = 20;
-    private static final short DEFAULT_HEADER_FONT_SIZE = 14;
+    private static final short DEFAULT_HEADER_FONT_SIZE = 12;
     private static final short DEFAULT_ROW_FONT_SIZE= 11;
 
     /**
@@ -57,6 +56,12 @@ public class ExcelUtil<T> {
      */
     private List<T> data;
 
+
+    /**
+     * 自动合并所有列
+     */
+    private boolean autoMerge;
+
     /**
      * 扩展名
      */
@@ -70,7 +75,7 @@ public class ExcelUtil<T> {
     /**
      * 创建excel表格
      */
-    public ExcelUtil<T> createExcel() throws IOException {
+    public ExcelUtil<T> createExcel() {
         if (CollectionUtils.isEmpty(columns) || CollectionUtils.isEmpty(data)) {
             throw new IllegalArgumentException();
         }
@@ -118,8 +123,8 @@ public class ExcelUtil<T> {
                 }
 
                 Cell cell = row.createCell(columnIndex);
-                setCellStyle(cell, column.getColumnType());
                 setCellData(cell, column.getColumnType(), cellValue);
+                setCellStyle(cell, column.getColumnType());
             }
         }
     }
@@ -155,7 +160,7 @@ public class ExcelUtil<T> {
         Object cellValue = getElemValue(elem, columns.get(columnIndex).getField());
 
         Column column = columns.get(columnIndex);
-        if (column.needMerge) {
+        if (autoMerge || column.needMerge) {
             ColumnRecord columnRecord = columnRecords.get(columnIndex);
 
             Object value = columnRecord.getValue();
@@ -170,10 +175,12 @@ public class ExcelUtil<T> {
 
             // 如果合并的开始行和结束行相等没必要合并
             boolean necessaryMerged = mergeStartIndex != mergeEndIndex;
+            boolean valueEquals = Objects.equals(value, cellValue);
+            boolean headValueEquals = Objects.equals(headValue, oldHeadValue);
 
             // 处于行首，值不相等时
             // 说明：行首值不相等，说明当前是另一条记录， 应该把先前的所有行首合并为一个单元格
-            if (columnIndex == 0 && !value.equals(cellValue)) {
+            if (columnIndex == 0 && !valueEquals) {
                 if (necessaryMerged) {
                     sheet.addMergedRegion(new CellRangeAddress(mergeStartIndex, mergeEndIndex, cellIndex, cellIndex));
                 }
@@ -186,8 +193,7 @@ public class ExcelUtil<T> {
                 // 满足 值不相等 或 值相等但行首的值不相等
                 // 说明：1、不相等应该把同一列先前的所有单元格合并为一个单元格
                 //       2、相等但行首不相等，还是要合并之前的
-                if (!value.equals(cellValue)
-                        || (value.equals(cellValue) && !headValue.equals(oldHeadValue))) {
+                if (!valueEquals || (valueEquals && !headValueEquals)) {
                     if (necessaryMerged) {
                         sheet.addMergedRegion(new CellRangeAddress(mergeStartIndex, mergeEndIndex, cellIndex, cellIndex));
                     }
@@ -200,10 +206,10 @@ public class ExcelUtil<T> {
             // 最后一行时，
             if (rowIndex == data.size()) {
                 // 处于行首，行首的值相等时，把当前行首往上合并，
-                if (columnIndex == 0 && value.equals(cellValue)) {
+                if (columnIndex == 0 && valueEquals) {
                     sheet.addMergedRegion(new CellRangeAddress(mergeStartIndex, rowIndex, cellIndex, cellIndex));
                     // 非行首，行首相等时，也往上合并
-                } else if (value.equals(cellValue) && headValue.equals(oldHeadValue)) {
+                } else if (valueEquals && headValueEquals) {
                     sheet.addMergedRegion(new CellRangeAddress(mergeStartIndex, rowIndex, cellIndex, cellIndex));
                 }
             }
@@ -270,6 +276,7 @@ public class ExcelUtil<T> {
                 }
                 break;
             case DOUBLE:
+            case AMOUNT:
                 if (originalValue != null && originalValue.toString().length() > 0
                         && Character.isWhitespace(originalValue.toString().charAt(0))) {
                     cell.setCellValue(Double.parseDouble(originalValue.toString()));
@@ -279,19 +286,7 @@ public class ExcelUtil<T> {
                 break;
             case DATE:
                 if (originalValue != null) {
-                    try {
-                        Date date = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
-                                .parse(originalValue.toString());
-                        cell.setCellValue(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
-                        return;
-                    } catch (ParseException ignored) {}
-                }
-                cell.setCellValue("");
-                break;
-            case TIMESTAMP:
-                if (originalValue != null) {
-                    cell.setCellValue(
-                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(originalValue.toString()));
+                    cell.setCellValue((Date)originalValue);
                 } else {
                     cell.setCellValue("");
                 }
@@ -311,6 +306,7 @@ public class ExcelUtil<T> {
         Font font = wb.createFont();
         font.setFontHeightInPoints(DEFAULT_HEADER_FONT_SIZE);
         font.setFontName(DEFAULT_FONT_NAME);
+        font.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
         CellStyle cs = wb.createCellStyle();
         cs.setFont(font);
@@ -329,20 +325,11 @@ public class ExcelUtil<T> {
      */
     private  void setColumnStyle(Cell columnTitle, ColumnType columnType) {
         CellStyle cs = wb.createCellStyle();
-        switch (columnType) {
-            case INTEGER:
-                cs.setDataFormat(wb.createDataFormat().getFormat("#,#0"));
-                break;
-            case DOUBLE:
-                cs.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
-                break;
-            default:
-                break;
-        }
 
         Font font = wb.createFont();
         font.setFontHeightInPoints(DEFAULT_ROW_FONT_SIZE);
         font.setFontName(DEFAULT_FONT_NAME);
+        font.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
         cs.setFont(font);
         cs.setAlignment(HSSFCellStyle.ALIGN_CENTER);
@@ -360,8 +347,16 @@ public class ExcelUtil<T> {
     private void setCellStyle(Cell cell, ColumnType columnType) {
         CellStyle cs = wb.createCellStyle();
         switch (columnType) {
+            case INTEGER:
+                cs.setDataFormat(wb.createDataFormat().getFormat("0"));
+                break;
             case DOUBLE:
-                cs.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
+                cs.setDataFormat(wb.createDataFormat().getFormat("0.00"));
+                break;
+            case AMOUNT:
+                cs.setDataFormat(wb.createDataFormat().getFormat("#,###.00"));
+            case DATE:
+                cs.setDataFormat(wb.createDataFormat().getFormat("m/d/yy h:mm"));
                 break;
             default:
         }
@@ -395,25 +390,30 @@ public class ExcelUtil<T> {
         }
     }
 
-//    public void toDownload(HttpServletResponse response) throws IOException {
-//        if (getFileName() == null) {
-//            setFileName(getTableName() != null ?
-//                    getTableName() : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-//        }
-//
-//        String fileName = new String((getFileName() + "." + ext).getBytes(), StandardCharsets.ISO_8859_1);
-//
-//        response.reset();
-//        response.setContentType("application/vnd.ms-struct;charset=utf-8");
-//        response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-//
-//        ServletOutputStream out = response.getOutputStream();
-//        wb.write(out);
-//        out.flush();
-//        out.close();
-//    }
-
     public void write() throws IOException {
+        wb.write(out);
+        out.flush();
+        out.close();
+    }
+
+    /**
+     * 通过http下载
+     *
+     * @param response
+     * @throws IOException
+     */
+    public void writeToHttpResponse(HttpServletResponse response) throws IOException {
+        if (fileName == null) {
+            fileName = (tableName!= null ? tableName : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        }
+
+        String fileName = new String((getFileName() + "." + ext).getBytes(), StandardCharsets.ISO_8859_1);
+
+        response.reset();
+        response.setContentType("application/vnd.ms-struct;charset=utf-8");
+        response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+
+        ServletOutputStream out = response.getOutputStream();
         wb.write(out);
         out.flush();
         out.close();
@@ -425,7 +425,7 @@ public class ExcelUtil<T> {
      * @return
      * @throws IOException
      */
-    public String toFile() throws IOException {
+    public String writeToFile() throws IOException {
         File file = new File(fileName + "." + ext);
         out = new FileOutputStream(file);
         wb.write(out);
@@ -511,6 +511,15 @@ public class ExcelUtil<T> {
 
     public ExcelUtil<T> setOut(OutputStream out) {
         this.out = out;
+        return this;
+    }
+
+    public boolean isAutoMerge() {
+        return autoMerge;
+    }
+
+    public ExcelUtil<T> setAutoMerge(boolean autoMerge) {
+        this.autoMerge = autoMerge;
         return this;
     }
 
@@ -627,9 +636,9 @@ public class ExcelUtil<T> {
          */
         DATE,
         /**
-         * 时间戳
+         * 金额
          */
-        TIMESTAMP
+        AMOUNT
     }
 }
 
