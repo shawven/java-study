@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Test {
 
     public static void main(String[] args) {
-        System.out.println("main start");
+        System.out.println("Main start");
         final AtomicInteger i = new AtomicInteger(0);
         Thread thread = new Thread(() -> {
             while (true) {
@@ -39,6 +39,6 @@ public class Test {
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-        System.out.println("main end");
+        System.out.println("Main end");
     }
 }

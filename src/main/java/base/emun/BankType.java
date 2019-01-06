@@ -1,4 +1,4 @@
-package emun;
+package base.emun;
 
 public enum BankType {
 

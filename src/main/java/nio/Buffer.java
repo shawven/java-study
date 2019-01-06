@@ -13,8 +13,8 @@ import java.nio.channels.FileChannel;
 public class Buffer {
 
     public static void main(String[] args) throws IOException {
-        String oldPath = "D:\\WorkSpace\\java\\Test\\src\\main\\java\\nio\\a.txt";
-        String newPath = "D:\\WorkSpace\\java\\Test\\src\\main\\java\\nio\\b.txt";
+        String oldPath = "D:\\WorkSpace\\java\\Test\\src\\Main\\java\\nio\\a.txt";
+        String newPath = "D:\\WorkSpace\\java\\Test\\src\\Main\\java\\nio\\b.txt";
 
         File file = new File(newPath);
         if (!file.exists()) {

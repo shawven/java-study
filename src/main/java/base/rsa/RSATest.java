@@ -1,4 +1,4 @@
-package rsa; /**
+package base.rsa; /**
  * @author FS
  * @date 2018-10-17 16:16
  */
@@ -55,8 +55,8 @@ public class RSATest {
     }
 
     public RSATest(){
-        priKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\main\\java\\pkcs8_private_key.pem");
-        pubKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\main\\java\\rsa_public_key.pem");
+        priKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\Main\\java\\pkcs8_private_key.pem");
+        pubKey = readStringFromFile("D:\\WorkSpace\\java\\Test\\src\\Main\\java\\rsa_public_key.pem");
     }
 
     /**

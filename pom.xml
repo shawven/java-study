@@ -145,9 +145,9 @@
           <scope>provided</scope>
       </dependency>
       <!--<dependency>-->
-          <!--<groupId>javax.servlet.jsp</groupId>-->
-          <!--<artifactId>javax.servlet.jsp-api</artifactId>-->
-          <!--<version>${javax.servlet.jsp-api}</version>-->
+          <!--<groupId>javax.web.servlet.jsp</groupId>-->
+          <!--<artifactId>javax.web.servlet.jsp-api</artifactId>-->
+          <!--<version>${javax.web.servlet.jsp-api}</version>-->
           <!--<scope>provided</scope>-->
       <!--</dependency>-->
 
