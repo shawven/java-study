@@ -105,5 +105,6 @@ public class Test {
         DecimalFormat df=new DecimalFormat(pattern);
         String str=df.format(value);
         System.out.println("使用" + pattern+ "\t格式化数字"+value+"：\t" + str);
+
     }
 }

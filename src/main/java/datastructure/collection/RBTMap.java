@@ -4,6 +4,8 @@ import datastructure.tree.AVLTree;
 import datastructure.tree.RBTree;
 
 /**
+ * 红黑树
+ *
  * @author XW
  * @since 2018-12-06 0:52
  */

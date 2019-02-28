@@ -34,6 +34,7 @@ public class Heap<E extends Comparable<E>> {
 
 
     private void shiftUp(int index) {
+        // 非顶点且父亲节点的值比当前节点要小时，继续循环上浮
         while (index > 0 && data.get(parent(index)).compareTo(data.get(index)) < 0) {
             data.swap(index, parent(index));
             index = parent(index);
@@ -50,19 +51,24 @@ public class Heap<E extends Comparable<E>> {
     }
 
     private void shiftDown(int index) {
-        int leftIndex;
+        int i;
 
-        while ((leftIndex = leftChild(index)) < size){
-            if ((leftIndex + 1) < size
-                    && data.get(leftIndex + 1).compareTo(data.get(leftIndex)) > 0) {
-                leftIndex ++;
+        // 当前节点的左孩子所在位置 >= size即越界了，说明当前节点是叶子节点，无需下沉了。
+        while ((i = leftChild(index)) < size){
+            // 右孩子的值比左孩子大，当前索引切换到右孩子
+            if ((i + 1) < size
+                    && data.get(i + 1).compareTo(data.get(i)) > 0) {
+                i ++;
             }
 
-            if ((data.get(index).compareTo(data.get(leftIndex)) >= 0) ) {
+            // 当前值大于等于左右孩子的最大值时，说明已经处于合适的位置
+            if ((data.get(index).compareTo(data.get(i)) >= 0) ) {
                 break;
             }
-            data.swap(index, leftIndex);
-            index = leftIndex;
+
+            // 和左右孩子交换后继续循环
+            data.swap(index, i);
+            index = i;
         }
     }
 
@@ -75,6 +81,7 @@ public class Heap<E extends Comparable<E>> {
             return;
         }
 
+        // 从第一个非叶子节点开始对每个节点依次下沉
         int parentIndexOfLastLeaf = parent(size - 1);
         for (int i = parentIndexOfLastLeaf; i >= 0; i--) {
             shiftDown(i);

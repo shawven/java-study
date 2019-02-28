@@ -3,6 +3,8 @@ package datastructure.collection;
 import datastructure.tree.AVLTree;
 
 /**
+ * 平衡二叉树
+ *
  * @author XW
  * @since 2018-12-06 0:52
  */

@@ -4,6 +4,8 @@ import java.util.Stack;
 import java.util.UUID;
 
 /**
+ * 二分搜索树
+ *
  * @author XW
  * @since 2018-12-06 0:52
  */
