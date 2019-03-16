@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.UUID;
 
 /**
  * @author FS
@@ -99,6 +100,7 @@ public class Test {
 //            wb.write(fileOut);
 //        }
 
+        System.out.println(UUID.randomUUID().toString());
     }
 
     public static void format(String pattern,double value){
