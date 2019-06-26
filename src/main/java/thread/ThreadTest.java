@@ -1,6 +1,6 @@
 package thread;
 
-import web.supports.utils.KeyWorker;
+//import web.supports.utils.KeyWorker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,6 +42,8 @@ public class ThreadTest {
 //        while(!executor.isTerminated()) {
 //            System.out.println("已完成任务数目：" + executor.getCompletedTaskCount());
 //        }
+
+        System.out.println("hhh");
     }
 
     public void runTask() {
@@ -57,9 +59,9 @@ public class ThreadTest {
     public List<Long> generator() {
         HashSet<Long> integers = new HashSet<>();
 
-        while (integers.size() <= 20) {
-            integers.add(KeyWorker.nextId());
-        }
+//        while (integers.size() <= 20) {
+//            integers.add(KeyWorker.nextId());
+//        }
         return new ArrayList<>(integers);
     }
 

@@ -19,7 +19,7 @@
         <!--<logger name="org.apache.ibatis.io" level="DEBUG"/>-->
         <!--<logger name="org.mybatis" level="DEBUG"/>-->
 
-        <Root level="DEBUG">
+        <Root level="INFO">
             <AppenderRef ref="Console" />
             <!--<AppenderRef ref="RollingFile" />-->
         </Root>

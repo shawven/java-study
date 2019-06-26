@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script>
+    var request = new XMLHttpRequest();
+    request.open("get", 'http://localhost:8080/code/sms?mobile=18684844590')
+    request.send()
+    request.onreadystatechange = function (res) {
+        console.log(res)
+        console.log(request)
+    }
+</script>
+</html>

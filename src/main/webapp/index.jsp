@@ -8,4 +8,9 @@
 <h1>Hello World!</h1>
 <a href="${ctx}/passport">login</a>
 </body>
+<style>
+    .cls {
+        color: #ffffff;
+    }
+</style>
 </html>

@@ -12,7 +12,7 @@ public class CglibBeanTest {
         System.out.println(new Test2().getName());
 
 
-//        Test1 test2 = new Test2();
+//        Algorithm test2 = new Test2();
 //        BeanInfo beanInfo = Introspector.getBeanInfo(test2.getClass());
 //        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 //        for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
