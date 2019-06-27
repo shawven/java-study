@@ -3,7 +3,6 @@ package util;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
-import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -15,7 +14,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.*;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -44,6 +45,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -62,7 +64,7 @@ public class HttpClientUtils {
     private static final int MAX_TOTAL = 200;
     private static final int MAX_PER_ROUTE = 100;
     private static final Charset CHARSET = StandardCharsets.UTF_8;
-    private static final Gson GSON = new Gson();
+    private static final Gson JSON = new Gson();
     private static final String HTTP = "http";
     private static final String HTTPS = "https";
     private static final String[] SUPPORTED_PROTOCOLS = {"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.2"};
@@ -101,15 +103,6 @@ public class HttpClientUtils {
         }
     }
 
-    public static CloseableHttpClient getHttpClient() {
-        return HttpClients.custom()
-                .setDefaultRequestConfig(defaultRequestConfig)
-                .setConnectionManager(defaultPoolingHttpClientConnectionManager)
-                .setSSLSocketFactory(defaultSSLConnectionSocketFactory)
-                .setConnectionTimeToLive(TIMEOUT, TimeUnit.SECONDS)
-                .build();
-    }
-
     /**
      * 普通GET请求
      *
@@ -131,8 +124,7 @@ public class HttpClientUtils {
      * @throws IOException
      */
     public static String get(String url, Object query) throws IOException {
-        String queryString = buildQueryString(query);
-        HttpGet httpGet = new HttpGet(queryString == null ? url : url  + queryString);
+        HttpGet httpGet = new HttpGet(joinUrlAndParams(url, query));
         return execute(httpGet);
     }
 
@@ -146,8 +138,7 @@ public class HttpClientUtils {
      * @throws IOException
      */
     public static String get(String url, Map<String, String> headers, Object query) throws IOException {
-        String queryString = buildQueryString(query);
-        HttpGet httpGet = new HttpGet( query  + queryString);
+        HttpGet httpGet = new HttpGet(joinUrlAndParams(url, query));
         httpGet.setHeaders(buildHeaders(headers));
         return execute(httpGet);
     }
@@ -221,13 +212,74 @@ public class HttpClientUtils {
      * @throws IOException
      */
     public static <T extends HttpRequestBase> String execute(T request) throws IOException {
-        CloseableHttpClient httpClient = getHttpClient();
+        return execute(getDefaultClient(), request);
+    }
+
+    /**
+     * 发起http请求
+     *
+     * @param httpClient
+     * @param request
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
+    public static <T extends HttpRequestBase> String execute(CloseableHttpClient httpClient,
+                                                             T request) throws IOException {
         // 关闭连接,释放资源
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             // 执行请求
             HttpEntity entity = response.getEntity();
             return entity == null ? null : EntityUtils.toString(entity, CHARSET);
         }
+    }
+
+    /**
+     * 获取默认客户端
+     *
+     * @return
+     */
+    public static CloseableHttpClient getDefaultClient() {
+        return getClient(defaultRequestConfig, defaultPoolingHttpClientConnectionManager,
+                defaultSSLConnectionSocketFactory);
+    }
+
+    /**
+     * 获取客户端
+     *
+     * @param requestConfig
+     * @param manager
+     * @param connectionSocketFactory
+     * @return
+     */
+    private static CloseableHttpClient getClient(RequestConfig requestConfig,
+                                                     HttpClientConnectionManager manager,
+                                                     LayeredConnectionSocketFactory connectionSocketFactory) {
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setConnectionManager(manager)
+                .setSSLSocketFactory(connectionSocketFactory)
+                .setConnectionTimeToLive(TIMEOUT, TimeUnit.SECONDS)
+                .build();
+    }
+
+    /**
+     * 连接url和参数
+     *
+     * @return
+     */
+    private static String joinUrlAndParams(String url, Object payload) {
+        String queryString = buildQueryString(payload);
+        if (queryString == null) {
+            return url;
+        }
+        StringBuilder fullUrl = new StringBuilder(url);
+        if (Pattern.matches(".+\\?.+", url)) {
+            fullUrl.append("&").append(queryString.substring(1));
+        } else {
+            fullUrl.append(queryString);
+        }
+        return fullUrl.toString();
     }
 
     /**
@@ -325,7 +377,7 @@ public class HttpClientUtils {
      * @return StringEntity
      */
     private static StringEntity buildJsonBody(Object payload) {
-        return new StringEntity(GSON.toJson(payload), ContentType.APPLICATION_JSON.withCharset(CHARSET));
+        return new StringEntity(JSON.toJson(payload), ContentType.APPLICATION_JSON.withCharset(CHARSET));
     }
 
     /**
@@ -396,7 +448,7 @@ public class HttpClientUtils {
         if (input instanceof Map) {
             mapInput = (Map)input;
         } else {
-            Set<Map.Entry<String, JsonElement>> entries = GSON.toJsonTree(input).getAsJsonObject().entrySet();
+            Set<Map.Entry<String, JsonElement>> entries = JSON.toJsonTree(input).getAsJsonObject().entrySet();
             mapInput = new LinkedHashMap<>(entries.size());
             entries.forEach(entry -> mapInput.put(entry.getKey(), entry.getValue().getAsString()));
         }
@@ -426,9 +478,12 @@ public class HttpClientUtils {
 
         private ContentType contentType;
 
+        private RequestConfig.Builder requestConfigBuilder;
+
         HttpClientExecutor() {
             this.headers = new ArrayList<>();
             this.contentType = ContentType.APPLICATION_FORM_URLENCODED.withCharset(CHARSET);
+            this.requestConfigBuilder =  RequestConfig.copy(defaultRequestConfig);
         }
 
         /**
@@ -559,6 +614,16 @@ public class HttpClientUtils {
             return this;
         }
 
+        public HttpClientExecutor setReadTimeOut(int socketTimeOut) {
+            requestConfigBuilder.setSocketTimeout(socketTimeOut);
+            return this;
+        }
+
+        public HttpClientExecutor setConnectTimeOut(int connectTimeOut) {
+            requestConfigBuilder.setConnectTimeout(connectTimeOut);
+            return this;
+        }
+
         /**
          * 普通http请求头 chrome浏览器
          *
@@ -609,16 +674,66 @@ public class HttpClientUtils {
         }
 
         /**
-         * 执行http请求
+         * 异步执行http请求 返回字符串
          *
          * @return
          * @throws IOException
+         */
+        public CompletableFuture<String> asyncExecute() {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return this.doExecute();
+                } catch (IOException e) {
+                    throw new WrappedIOException(e);
+                }
+            });
+        }
+
+        /**
+         * 异步执行http请求 返回指定类型
+         *
+         * @param responseType
+         * @param <R>
+         * @return
+         */
+        public <R> CompletableFuture<R> asyncExecute(Class<R> responseType) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return this.doExecute();
+                } catch (IOException e) {
+                    throw new WrappedIOException(e);
+                }
+            }).thenApply(s -> parseResponse(s, responseType));
+        }
+
+        /**
+         * 异步执行http请求 返回指定类型
+         *
+         * @param responseType
+         * @param <R>
+         * @return
+         */
+        public <R>  CompletableFuture<R> asyncExecute(TypeToken<R> responseType) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return this.doExecute();
+                } catch (IOException e) {
+                    throw new WrappedIOException( e);
+                }
+            }).thenApply(s -> parseResponse(s, responseType));
+        }
+
+
+        /**
+         * 执行http请求
+         *
+         * @return
          */
         private String doExecute() throws IOException {
             request.setURI(URI.create(url));
             switch (request.getMethod()) {
                 case HttpGet.METHOD_NAME:
-                    request.setURI(URI.create(getUrlAndParams()));
+                    request.setURI(URI.create(joinUrlAndParams(url, payload)));
                     break;
                 case HttpPost.METHOD_NAME:
                 case HttpPut.METHOD_NAME:
@@ -632,25 +747,11 @@ public class HttpClientUtils {
                 request.setHeaders(headers.toArray(new Header[]{}));
             }
 
-            return HttpClientUtils.execute(request);
+            CloseableHttpClient client = getClient(requestConfigBuilder.build(),
+                    defaultPoolingHttpClientConnectionManager,
+                    defaultSSLConnectionSocketFactory);
+            return HttpClientUtils.execute(client, request);
         }
-
-        /**
-         * 获取url和参数
-         *
-         * @return
-         */
-        private String getUrlAndParams() {
-            String queryString = buildQueryString(payload);
-            StringBuilder fullUrl = new StringBuilder(url);
-            if (Pattern.matches(".+\\?.+", url)) {
-                fullUrl.append("&").append(queryString.substring(1));
-            } else {
-                fullUrl.append(queryString);
-            }
-            return fullUrl.toString();
-        }
-
 
         /**
          * 获取请求实体
@@ -684,7 +785,7 @@ public class HttpClientUtils {
             if (responseType.isAssignableFrom(String.class)) {
                 return (R)str;
             }
-            return GSON.fromJson(str, responseType);
+            return JSON.fromJson(str, responseType);
         }
 
         /**
@@ -702,8 +803,17 @@ public class HttpClientUtils {
             if (responseType.getRawType().isAssignableFrom(String.class)) {
                 return (R)str;
             }
-            return GSON.fromJson(str, responseType.getType());
+            return JSON.fromJson(str, responseType.getType());
         }
     }
 
+    /**
+     * 包装的IO异常
+     */
+    private static class WrappedIOException extends RuntimeException {
+
+        public WrappedIOException(Throwable cause) {
+            super(cause);
+        }
+    }
 }

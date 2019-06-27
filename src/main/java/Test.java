@@ -1,8 +1,12 @@
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.CaseFormat;
+import org.apache.commons.lang3.RandomStringUtils;
+import util.HttpClientUtils;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author FS
@@ -12,15 +16,23 @@ public class Test {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
 
-    }
+        CompletableFuture<String> future = HttpClientUtils.executor()
+                .get("http://www.baidu.com")
+                .setConnectTimeOut(20)
+                .setReadTimeOut(20)
+                .asyncExecute();
 
-    public static void printThead() {
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(Thread.currentThread());
+
+
+        future.thenApply((s) -> {
+            System.out.println("consume produce: " + s);
+            return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, s);
+        }).thenApply(s -> {
+            return s + "  say: " + RandomStringUtils.randomAlphabetic(5);
+        }).whenComplete((s, throwable) -> {
+            System.out.println("whenComplete");
+        }).join();
+
     }
 }
 
